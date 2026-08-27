@@ -146,3 +146,21 @@ def test_similar_but_nonsensitive_names_are_not_flagged() -> None:
 
     assert result.redacted == source
     assert result.findings == ()
+
+
+def test_url_redaction_is_safe_to_reaudit() -> None:
+    source = json.dumps(
+        {
+            "url": (
+                "https://demo:password@example.test/account"
+                "?access_token=query-secret-123&page=1"
+            )
+        }
+    )
+
+    first = process_text("0-trace.network", source)
+    second = process_text("0-trace.network", first.redacted)
+
+    assert first.findings
+    assert second.findings == ()
+    assert second.redacted == first.redacted
