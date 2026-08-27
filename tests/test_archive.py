@@ -100,5 +100,5 @@ def test_rejects_zip_without_playwright_trace_member(tmp_path: Path) -> None:
     source = tmp_path / "generic.zip"
     write_zip(source, [("notes.txt", b"hello")])
 
-    with pytest.raises(ArchiveError, match=r"Playwright \\.trace or \\.network"), open_trace(source):
+    with pytest.raises(ArchiveError, match=r"Playwright \.trace or \.network"), open_trace(source):
         pass
