@@ -120,6 +120,8 @@ class _Processor:
         def replace(match: re.Match[str]) -> str:
             value = match.group(2) if match.lastindex and match.lastindex >= 2 else match.group(1)
             group = 2 if match.lastindex and match.lastindex >= 2 else 1
+            if _is_redacted(unquote(value)):
+                return match.group(0)
             replacement = self._redact(value, category, f"{location}@{match.start(group)}")
             relative_start = match.start(group) - match.start(0)
             relative_end = match.end(group) - match.start(0)
@@ -151,12 +153,14 @@ class _Processor:
         query_items: list[tuple[str, str]] = []
         for index, (name, value) in enumerate(parse_qsl(parts.query, keep_blank_values=True)):
             if _normalized_name(name) in _SENSITIVE_NAMES:
-                value = self._redact(
+                redacted_value = self._redact(
                     value,
                     "sensitive-query",
                     f"{location}.query[{index}]",
                 )
-                changed = True
+                if redacted_value != value:
+                    changed = True
+                value = redacted_value
             query_items.append((name, value))
 
         if not changed:
