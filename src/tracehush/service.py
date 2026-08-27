@@ -66,19 +66,20 @@ def _copy_archive(
     temporary_output: Path,
     secrets: Sequence[str],
 ) -> None:
-    with open_trace(source) as input_archive:
-        with zipfile.ZipFile(temporary_output, "w") as output_archive:
-            output_archive.comment = input_archive.comment
-            for info in input_archive.infolist():
-                data = input_archive.read(info)
-                if not info.is_dir():
-                    try:
-                        text = data.decode("utf-8")
-                    except UnicodeDecodeError:
-                        pass
-                    else:
-                        data = process_text(info.filename, text, secrets).redacted.encode("utf-8")
-                output_archive.writestr(info, data)
+    with open_trace(source) as input_archive, zipfile.ZipFile(
+        temporary_output, "w"
+    ) as output_archive:
+        output_archive.comment = input_archive.comment
+        for info in input_archive.infolist():
+            data = input_archive.read(info)
+            if not info.is_dir():
+                try:
+                    text = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    pass
+                else:
+                    data = process_text(info.filename, text, secrets).redacted.encode("utf-8")
+            output_archive.writestr(info, data)
 
 
 def sanitize_trace(

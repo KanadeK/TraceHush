@@ -90,20 +90,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         secrets = _load_secrets(args.secrets_from)
         if args.command == "audit":
-            report = audit_trace(args.trace, secrets)
+            audit_report = audit_trace(args.trace, secrets)
             rendered = (
-                render_json(audit_payload(report))
+                render_json(audit_payload(audit_report))
                 if args.format == "json"
-                else render_audit_console(report)
+                else render_audit_console(audit_report)
             )
             _emit(rendered, args.output)
-            return 0 if report.clean else 1
+            return 0 if audit_report.clean else 1
 
-        report = sanitize_trace(args.trace, args.output, secrets)
+        sanitization_report = sanitize_trace(args.trace, args.output, secrets)
         rendered = (
-            render_json(sanitization_payload(report))
+            render_json(sanitization_payload(sanitization_report))
             if args.format == "json"
-            else render_sanitization_console(report)
+            else render_sanitization_console(sanitization_report)
         )
         _emit(rendered, args.report)
         return 0
