@@ -106,9 +106,7 @@ def test_redacts_explicit_literal_everywhere_deterministically() -> None:
 
     assert secret not in first.redacted
     assert first.redacted == second.redacted
-    assert {item.fingerprint for item in first.findings} == {
-        first.findings[0].fingerprint
-    }
+    assert {item.fingerprint for item in first.findings} == {first.findings[0].fingerprint}
     assert first.redacted.count("[TRACEHUSH_REDACTED:explicit-secret:") == 2
 
 

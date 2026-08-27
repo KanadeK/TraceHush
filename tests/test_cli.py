@@ -47,9 +47,7 @@ def test_audit_json_exit_codes_and_no_secret_leak(
     assert payload["residual_risks"][0]["kind"] == "uninspected-binary-members"
 
 
-def test_audit_console_is_actionable(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_audit_console_is_actionable(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     source = tmp_path / "trace.zip"
     write_trace(
         source,

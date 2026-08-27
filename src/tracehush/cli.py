@@ -64,11 +64,7 @@ def _load_secrets(path: Path | None) -> tuple[str, ...]:
             name, value = line.split("=", 1)
             if _ENV_NAME_RE.fullmatch(name.strip()):
                 candidate = value.strip()
-        if (
-            len(candidate) >= 2
-            and candidate[0] == candidate[-1]
-            and candidate[0] in {'"', "'"}
-        ):
+        if len(candidate) >= 2 and candidate[0] == candidate[-1] and candidate[0] in {'"', "'"}:
             candidate = candidate[1:-1]
         if len(candidate) < 4:
             raise SecretFileError(

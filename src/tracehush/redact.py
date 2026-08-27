@@ -218,8 +218,10 @@ class _Processor:
             if key == "value" and pair_category is not None and isinstance(child, str):
                 transformed[key] = self._redact(child, pair_category, child_location)
                 continue
-            if container == "form-params" and key.lower() in {"value", "text"} and isinstance(
-                child, str
+            if (
+                container == "form-params"
+                and key.lower() in {"value", "text"}
+                and isinstance(child, str)
             ):
                 transformed[key] = self._redact(
                     child,

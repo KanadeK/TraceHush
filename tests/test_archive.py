@@ -35,9 +35,8 @@ def test_rejects_unsafe_member_names(tmp_path: Path, name: str) -> None:
     source = tmp_path / "unsafe.zip"
     write_zip(source, [(name, b"data"), ("0-trace.trace", b"{}\n")])
 
-    with pytest.raises(ArchiveError, match="unsafe member name"):
-        with open_trace(source):
-            pass
+    with pytest.raises(ArchiveError, match="unsafe member name"), open_trace(source):
+        pass
 
 
 def test_rejects_duplicate_member_names(tmp_path: Path) -> None:
@@ -47,9 +46,8 @@ def test_rejects_duplicate_member_names(tmp_path: Path) -> None:
         with pytest.warns(UserWarning, match="Duplicate name"):
             archive.writestr("0-trace.trace", b"second")
 
-    with pytest.raises(ArchiveError, match="duplicate member name"):
-        with open_trace(source):
-            pass
+    with pytest.raises(ArchiveError, match="duplicate member name"), open_trace(source):
+        pass
 
 
 def test_rejects_encrypted_member_metadata() -> None:
@@ -65,9 +63,8 @@ def test_rejects_too_many_members(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     write_zip(source, [("0-trace.trace", b"{}"), ("1-trace.trace", b"{}")])
     monkeypatch.setattr(archive_module, "MAX_MEMBERS", 1)
 
-    with pytest.raises(ArchiveError, match="more than 1 members"):
-        with open_trace(source):
-            pass
+    with pytest.raises(ArchiveError, match="more than 1 members"), open_trace(source):
+        pass
 
 
 def test_rejects_oversized_member_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -95,15 +92,13 @@ def test_rejects_non_zip_input(tmp_path: Path, content: bytes) -> None:
     source = tmp_path / "bad.zip"
     source.write_bytes(content)
 
-    with pytest.raises(ArchiveError, match="valid ZIP"):
-        with open_trace(source):
-            pass
+    with pytest.raises(ArchiveError, match="valid ZIP"), open_trace(source):
+        pass
 
 
 def test_rejects_zip_without_playwright_trace_member(tmp_path: Path) -> None:
     source = tmp_path / "generic.zip"
     write_zip(source, [("notes.txt", b"hello")])
 
-    with pytest.raises(ArchiveError, match="Playwright .trace or .network"):
-        with open_trace(source):
-            pass
+    with pytest.raises(ArchiveError, match="Playwright .trace or .network"), open_trace(source):
+        pass
