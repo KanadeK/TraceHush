@@ -76,8 +76,7 @@ def main() -> None:
         {
             "type": "console",
             "text": (
-                "debug eyJhbGciOiJIUzI1NiJ9."
-                "eyJzdWIiOiJ0cmFjZWh1c2gtZGVtbyJ9.demo-signature-123"
+                "debug eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0cmFjZWh1c2gtZGVtbyJ9.demo-signature-123"
             ),
         },
     )
