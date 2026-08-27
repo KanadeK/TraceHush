@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from tracehush import __version__
-from tracehush.model import ReportError, SecretFileError, TraceHushError
+from tracehush.model import PathConflictError, ReportError, SecretFileError, TraceHushError
 from tracehush.report import (
     audit_payload,
     render_audit_console,
@@ -75,6 +75,21 @@ def _load_secrets(path: Path | None) -> tuple[str, ...]:
     return tuple(secrets)
 
 
+def _ensure_distinct(
+    candidate_label: str,
+    candidate: Path | None,
+    protected: Sequence[tuple[str, Path | None]],
+) -> None:
+    if candidate is None:
+        return
+    resolved_candidate = candidate.resolve()
+    for protected_label, protected_path in protected:
+        if protected_path is not None and resolved_candidate == protected_path.resolve():
+            raise PathConflictError(
+                f"{candidate_label} path must differ from {protected_label} path"
+            )
+
+
 def _emit(content: str, destination: Path | None) -> None:
     if destination is None:
         print(content)
@@ -88,6 +103,28 @@ def _emit(content: str, destination: Path | None) -> None:
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "audit":
+            _ensure_distinct(
+                "report",
+                args.output,
+                (("trace input", args.trace), ("secret file", args.secrets_from)),
+            )
+        else:
+            _ensure_distinct(
+                "sanitized output",
+                args.output,
+                (("trace input", args.trace), ("secret file", args.secrets_from)),
+            )
+            _ensure_distinct(
+                "report",
+                args.report,
+                (
+                    ("trace input", args.trace),
+                    ("sanitized output", args.output),
+                    ("secret file", args.secrets_from),
+                ),
+            )
+
         secrets = _load_secrets(args.secrets_from)
         if args.command == "audit":
             audit_report = audit_trace(args.trace, secrets)

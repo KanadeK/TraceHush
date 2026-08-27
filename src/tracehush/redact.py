@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from typing import Any
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit
 
-from tracehush.model import Finding, Severity, TextResult
+from tracehush.model import DetectionError, Finding, Severity, TextResult
 
 _REDACTED_PREFIX = "[TRACEHUSH_REDACTED:"
 _FORM_METHODS = {"fill", "type", "inserttext"}
@@ -131,7 +131,12 @@ class _Processor:
         return pattern.sub(replace, text)
 
     def _sanitize_url(self, raw_url: str, location: str) -> str:
-        parts = urlsplit(raw_url)
+        try:
+            parts = urlsplit(raw_url)
+        except ValueError as exc:
+            raise DetectionError(
+                f"malformed URL in {self.member}:{self.line} at {location}"
+            ) from exc
         netloc = parts.netloc
         changed = False
 

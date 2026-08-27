@@ -14,6 +14,14 @@ class ArchiveError(TraceHushError):
     """The input archive violates the supported safety boundary."""
 
 
+class DetectionError(TraceHushError):
+    """A supported text member contains malformed sensitive data."""
+
+
+class PathConflictError(TraceHushError):
+    """CLI paths would overwrite an input or another output."""
+
+
 class SanitizationError(TraceHushError):
     """A text-redacted archive could not be created and verified."""
 
