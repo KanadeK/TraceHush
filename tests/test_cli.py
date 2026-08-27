@@ -153,3 +153,101 @@ def test_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert raised.value.code == 0
     assert capsys.readouterr().out.strip() == f"tracehush {__version__}"
+
+
+def test_audit_report_cannot_overwrite_trace(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "trace.zip"
+    write_trace(source, [("0-trace.trace", b"{}\n")])
+    original = source.read_bytes()
+
+    assert main(["audit", str(source), "--output", str(source)]) == 2
+
+    captured = capsys.readouterr()
+    assert source.read_bytes() == original
+    assert "path must differ" in captured.err
+    assert "Traceback" not in captured.err
+
+
+@pytest.mark.parametrize("report_target", ["source", "output"])
+def test_sanitize_report_cannot_overwrite_trace_artifacts(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    report_target: str,
+) -> None:
+    source = tmp_path / "trace.zip"
+    output = tmp_path / "trace.redacted.zip"
+    write_trace(source, [("0-trace.trace", b"{}\n")])
+    original = source.read_bytes()
+    report = source if report_target == "source" else output
+
+    assert (
+        main(
+            [
+                "sanitize",
+                str(source),
+                str(output),
+                "--report",
+                str(report),
+            ]
+        )
+        == 2
+    )
+
+    captured = capsys.readouterr()
+    assert source.read_bytes() == original
+    assert not output.exists()
+    assert "path must differ" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_sanitize_output_cannot_overwrite_secret_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "trace.zip"
+    secrets = tmp_path / "secrets.env"
+    literal = "custom-private-literal-123"
+    write_trace(source, [("0-trace.trace", json.dumps({"note": literal}).encode())])
+    secrets.write_text(f"CUSTOM_VALUE={literal}\n", encoding="utf-8")
+    original = secrets.read_bytes()
+
+    assert (
+        main(
+            [
+                "sanitize",
+                str(source),
+                str(secrets),
+                "--secrets-from",
+                str(secrets),
+            ]
+        )
+        == 2
+    )
+
+    captured = capsys.readouterr()
+    assert secrets.read_bytes() == original
+    assert literal not in captured.out
+    assert literal not in captured.err
+    assert "path must differ" in captured.err
+    assert "Traceback" not in captured.err
+
+
+def test_malformed_url_returns_two_without_leaking_value(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = tmp_path / "trace.zip"
+    literal = "private-userinfo-123"
+    malformed_url = f"https://user:{literal}@[example.test/path"
+    write_trace(
+        source,
+        [("0-trace.trace", json.dumps({"url": malformed_url}).encode())],
+    )
+
+    assert main(["audit", str(source)]) == 2
+
+    captured = capsys.readouterr()
+    assert literal not in captured.out
+    assert literal not in captured.err
+    assert "malformed URL" in captured.err
+    assert "Traceback" not in captured.err
