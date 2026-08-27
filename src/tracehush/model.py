@@ -18,6 +18,14 @@ class SanitizationError(TraceHushError):
     """A text-redacted archive could not be created and verified."""
 
 
+class SecretFileError(TraceHushError):
+    """A user-provided literal-secret file is invalid or unreadable."""
+
+
+class ReportError(TraceHushError):
+    """A requested report file could not be written."""
+
+
 class Severity(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
