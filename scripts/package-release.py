@@ -54,7 +54,7 @@ def main() -> None:
         raise SystemExit(f"tag {tag} does not match project version {version}")
 
     DIST.mkdir(exist_ok=True)
-    _bundle_examples(version)
+    examples = _bundle_examples(version)
     source_output = DIST / f"tracehush-{version}-source.zip"
     subprocess.run(
         [
