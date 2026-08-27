@@ -66,9 +66,10 @@ def _copy_archive(
     temporary_output: Path,
     secrets: Sequence[str],
 ) -> None:
-    with open_trace(source) as input_archive, zipfile.ZipFile(
-        temporary_output, "w"
-    ) as output_archive:
+    with (
+        open_trace(source) as input_archive,
+        zipfile.ZipFile(temporary_output, "w") as output_archive,
+    ):
         output_archive.comment = input_archive.comment
         for info in input_archive.infolist():
             data = input_archive.read(info)
