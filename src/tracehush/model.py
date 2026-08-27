@@ -14,6 +14,10 @@ class ArchiveError(TraceHushError):
     """The input archive violates the supported safety boundary."""
 
 
+class SanitizationError(TraceHushError):
+    """A text-redacted archive could not be created and verified."""
+
+
 class Severity(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
@@ -33,3 +37,31 @@ class Finding:
 class TextResult:
     redacted: str
     findings: tuple[Finding, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AuditReport:
+    source: str
+    total_members: int
+    text_members: int
+    binary_members: tuple[str, ...]
+    findings: tuple[Finding, ...]
+
+    @property
+    def clean(self) -> bool:
+        return not self.findings
+
+    @property
+    def has_binary_residuals(self) -> bool:
+        return bool(self.binary_members)
+
+
+@dataclass(frozen=True, slots=True)
+class SanitizationReport:
+    before: AuditReport
+    after: AuditReport
+    output: str
+
+    @property
+    def has_binary_residuals(self) -> bool:
+        return self.after.has_binary_residuals
