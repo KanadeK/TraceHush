@@ -72,9 +72,7 @@ def main() -> None:
     )
     wheel = DIST / f"tracehush-{version}-py3-none-any.whl"
     source_distribution = DIST / f"tracehush-{version}.tar.gz"
-    checksums = _write_checksums(
-        (wheel, source_distribution, examples, source_output)
-    )
+    checksums = _write_checksums((wheel, source_distribution, examples, source_output))
     print(checksums)
 
 
