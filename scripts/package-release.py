@@ -35,13 +35,12 @@ def _bundle_examples(version: str) -> Path:
     return output
 
 
-def _write_checksums() -> Path:
+def _write_checksums(assets: tuple[Path, ...]) -> Path:
     output = DIST / "SHA256SUMS"
     lines = []
-    for path in sorted(DIST.iterdir(), key=lambda item: item.name):
-        if path.is_file() and path != output:
-            digest = hashlib.sha256(path.read_bytes()).hexdigest()
-            lines.append(f"{digest}  {path.name}")
+    for path in sorted(assets, key=lambda item: item.name):
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        lines.append(f"{digest}  {path.name}")
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return output
 
@@ -60,6 +59,8 @@ def main() -> None:
     subprocess.run(
         [
             "git",
+            "-c",
+            f"safe.directory={ROOT.as_posix()}",
             "archive",
             "--format=zip",
             f"--prefix=tracehush-{version}/",
@@ -69,7 +70,11 @@ def main() -> None:
         cwd=ROOT,
         check=True,
     )
-    checksums = _write_checksums()
+    wheel = DIST / f"tracehush-{version}-py3-none-any.whl"
+    source_distribution = DIST / f"tracehush-{version}.tar.gz"
+    checksums = _write_checksums(
+        (wheel, source_distribution, examples, source_output)
+    )
     print(checksums)
 
 
