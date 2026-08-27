@@ -7,7 +7,7 @@ import json
 import re
 from collections.abc import Sequence
 from typing import Any
-from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit
 
 from tracehush.model import Finding, Severity, TextResult
 
@@ -135,12 +135,18 @@ class _Processor:
 
         if "@" in netloc:
             userinfo, host = netloc.rsplit("@", 1)
-            safe_userinfo = quote(
-                self._redact(userinfo, "url-credentials", f"{location}.userinfo"),
-                safe="[]:_-",
-            )
-            netloc = f"{safe_userinfo}@{host}"
-            changed = True
+            decoded_userinfo = unquote(userinfo)
+            if not _is_redacted(decoded_userinfo):
+                safe_userinfo = quote(
+                    self._redact(
+                        decoded_userinfo,
+                        "url-credentials",
+                        f"{location}.userinfo",
+                    ),
+                    safe="",
+                )
+                netloc = f"{safe_userinfo}@{host}"
+                changed = True
 
         query_items: list[tuple[str, str]] = []
         for index, (name, value) in enumerate(parse_qsl(parts.query, keep_blank_values=True)):
